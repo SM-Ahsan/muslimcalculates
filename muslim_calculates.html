@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Muslim Calculates | Zakat & Baby Names</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Nastaliq+Urdu&family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .lang-ur { font-family: 'Noto Nastaliq Urdu', serif; direction: rtl; }
+        .page-section { display: none; }
+        .page-section.active { display: block; }
+        .name-card { transition: all 0.2s ease; }
+        .name-card:hover { transform: translateY(-2px); }
+        /* Mobile optimization for Urdu text height */
+        .lang-ur .urdu-text { line-height: 2.5; }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>">
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showPage('home')">
+                <div class="bg-emerald-600 p-1.5 rounded-lg text-white">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2 .712V17a1 1 0 001 1z"></path></svg>
+                </div>
+                <span class="font-bold text-slate-800 text-lg hidden sm:block">Muslim Calculates</span>
+            </div>
+            
+            <div class="flex items-center gap-3 sm:gap-6 text-sm font-medium">
+                <button onclick="showPage('home')" class="text-slate-600 hover:text-emerald-600">Zakat Calculator</button>
+                <button onclick="showPage('names')" class="text-slate-600 hover:text-emerald-600">Islamic Name Generator</button>
+                <button onclick="showPage('qaza-e-umri')" class="text-slate-600 hover:text-emerald-600">Compensatory Prayers Calculator</button>
+                <button onclick="showPage('about')" class="text-slate-600 hover:text-emerald-600 hidden md:block">About Us</button>
+                <select id="langSelector" onchange="changeLanguage(this.value)" class="bg-slate-100 border-none rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 outline-none">
+                    <option value="en">EN</option>
+                    <option value="ur">اردو</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-8 px-4">
+
+        <!-- PAGE: ZAKAT CALCULATOR (HOME) -->
+        <section id="home-page" class="page-section active">
+            <!-- [Calculator Code here - Included in logic below] -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-extrabold text-slate-900 section-title">Zakat Calculator</h2>
+                <p class="text-slate-500 mt-2 section-subtitle">Calculate your annual purification of wealth</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <!-- Inputs same as previous version but integrated -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-400 uppercase">Currency</label>
+                        <select id="currency" onchange="calculate()" class="w-full p-3 bg-slate-50 border rounded-xl outline-none">
+                            <option value="PKR">PKR (Pakistani Rupee)</option>
+                            <option value="USD">USD (Dollar)</option>
+                            <option value="BDT">BDT (Taka)</option>
+                            <option value="INR">INR (Rupee)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-400 uppercase">Silver Nisab</label>
+                        <input type="number" id="nisabValue" value="150000" oninput="calculate()" class="w-full p-3 bg-slate-50 border rounded-xl outline-none">
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <input type="number" class="calc-input w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Cash on hand/bank">
+                    <input type="number" class="calc-input w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Gold/Silver Market Value">
+                    <input type="number" id="debtInput" oninput="calculate()" class="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-red-700" placeholder="Debts Owed">
+                </div>
+                <div class="mt-8 bg-slate-900 rounded-2xl p-8 text-center text-white">
+                    <p class="text-emerald-400 text-xs font-bold uppercase mb-2">Payable Zakat</p>
+                    <div class="text-5xl font-black"><span class="currency-symbol text-2xl mr-2">PKR</span><span id="zakatAmount">0.00</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BRAND: Muslim Calculates -->
+<!-- MODULE: Qaza-e-Umri Namaz Calculator -->
+ <section id="qaza-e-umri-page" class="page-section active">
+<div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+    <!-- Header Section -->
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight sm:text-4xl">
+            Qaza-e-Umri Calculator
+        </h2>
+        <p class="mt-2 text-sm text-slate-500 max-w-md mx-auto">
+            Calculate your missed obligatory (Farz) and Witr prayers accumulated since reaching puberty.
+        </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Input Form Panel -->
+        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-6">
+            
+            <!-- Step 1: Puberty Age -->
+            <div>
+                <label for="pubertyAge" class="block text-sm font-bold text-slate-700 mb-2">
+                    Age of Puberty
+                </label>
+                <div class="relative rounded-xl shadow-sm">
+                    <input type="number" id="pubertyAge" value="15" min="9" max="20"
+                        class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all text-slate-800 font-medium">
+                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400 text-xs font-bold">
+                        YEARS OLD
+                    </div>
+                </div>
+                <p class="mt-1 text-xs text-slate-400">Default is 15 years if exact puberty age is unknown.</p>
+            </div>
+
+            <!-- Step 2: Missed Duration -->
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">
+                    Duration of Missed/Unperformed Prayers
+                </label>
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <input type="number" id="missedYears" min="0" placeholder="0"
+                            class="block w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white text-center font-bold text-slate-800">
+                        <span class="block text-center text-[10px] font-bold text-slate-400 uppercase mt-1">Years</span>
+                    </div>
+                    <div>
+                        <input type="number" id="missedMonths" min="0" max="11" placeholder="0"
+                            class="block w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white text-center font-bold text-slate-800">
+                        <span class="block text-center text-[10px] font-bold text-slate-400 uppercase mt-1">Months</span>
+                    </div>
+                    <div>
+                        <input type="number" id="missedDays" min="0" max="30" placeholder="0"
+                            class="block w-full px-3 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white text-center font-bold text-slate-800">
+                        <span class="block text-center text-[10px] font-bold text-slate-400 uppercase mt-1">Days</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Global Checkbox Toggle -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 flex items-start space-x-3">
+                <div class="flex items-center h-5">
+                    <input id="missedAll" type="checkbox" checked onchange="togglePrayerInputs()"
+                        class="w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 accent-emerald-600 cursor-pointer">
+                </div>
+                <div class="text-sm">
+                    <label for="missedAll" class="font-bold text-slate-700 cursor-pointer">I missed all 5 daily prayers completely throughout this timespan</label>
+                    <p class="text-xs text-slate-400">Uncheck this if you offered some prayers but missed others.</p>
+                </div>
+            </div>
+
+            <!-- Step 4: Specific Prayer Selectors (Hidden by default via inline style/JS changes) -->
+            <div id="specificPrayersPanel" class="hidden space-y-3 pt-2 border-t border-dashed border-slate-200">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select which prayers were missed during this time:</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Fajr -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaFajr" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Fajr <span class="text-xs font-normal text-slate-400">(2 Farz)</span></span>
+                    </label>
+                    <!-- Zuhr -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaZuhr" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Zuhr <span class="text-xs font-normal text-slate-400">(4 Farz)</span></span>
+                    </label>
+                    <!-- Asr -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaAsr" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Asr <span class="text-xs font-normal text-slate-400">(4 Farz)</span></span>
+                    </label>
+                    <!-- Maghrib -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaMaghrib" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Maghrib <span class="text-xs font-normal text-slate-400">(3 Farz)</span></span>
+                    </label>
+                    <!-- Isha -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaIsha" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Isha <span class="text-xs font-normal text-slate-400">(4 Farz)</span></span>
+                    </label>
+                    <!-- Witr -->
+                    <label class="flex items-center space-x-3 p-3 border border-slate-100 rounded-xl bg-white shadow-sm cursor-pointer hover:border-emerald-100">
+                        <input type="checkbox" id="qazaWitr" checked class="w-4 h-4 accent-emerald-600">
+                        <span class="text-sm font-semibold text-slate-700">Witr <span class="text-xs font-normal text-slate-400">(3 Wajib)</span></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button onclick="calculateQaza()" 
+                class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl shadow-md hover:shadow-lg transition-all tracking-wide uppercase text-sm">
+                Calculate Qaza Account
+            </button>
+        </div>
+
+        <!-- Real-Time Output Panel -->
+        <div class="lg:col-span-5 space-y-4">
+            <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-xl relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-slate-800 opacity-20 pointer-events-none">
+                    <svg width="140" height="140" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+                </div>
+                
+                <h3 class="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-1">Total Calculations</h3>
+                <div class="flex items-baseline space-x-2">
+                    <span id="totalMissedDaysDisplay" class="text-5xl font-black tracking-tight">0</span>
+                    <span class="text-slate-400 text-sm font-bold uppercase">Total Days</span>
+                </div>
+
+                <hr class="border-slate-800 my-4">
+
+                <!-- Detailed Breakdown List -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl">
+                        <span class="text-sm font-medium text-slate-300">Fajr Qaza</span>
+                        <span id="countFajr" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl">
+                        <span class="text-sm font-medium text-slate-300">Zuhr Qaza</span>
+                        <span id="countZuhr" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl">
+                        <span class="text-sm font-medium text-slate-300">Asr Qaza</span>
+                        <span id="countAsr" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl">
+                        <span class="text-sm font-medium text-slate-300">Maghrib Qaza</span>
+                        <span id="countMaghrib" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl">
+                        <span class="text-sm font-medium text-slate-300">Isha Qaza</span>
+                        <span id="countIsha" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800/40 p-3 rounded-xl border border-dashed border-emerald-900/50">
+                        <span class="text-sm font-bold text-emerald-300">Witr Qaza</span>
+                        <span id="countWitr" class="font-mono font-bold text-lg text-emerald-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informational Note Box -->
+            <div class="p-4 rounded-xl bg-amber-50/60 border border-amber-100 text-amber-900 text-xs space-y-1">
+                <p class="font-bold">💡 Jurisprudential Rule Note:</p>
+                <p class="text-amber-800/90 leading-relaxed">
+                    Qaza is calculated solely for obligatory actions (**Farz**) and essential elements (**Witr**). Voluntaries like Sunnah and Nafl are exempt from calculation structures. It is highly recommended to perform these remaining prayers alongside or separate from daily active prayers.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+
+        <!-- PAGE: BABY NAME GENERATOR -->
+        <section id="names-page" class="page-section">
+            <div class="text-center mb-8">
+                <h2 id="n-title" class="text-3xl font-extrabold text-slate-900">Baby Name Generator</h2>
+                <p id="n-subtitle" class="text-slate-500 mt-2">Find the perfect Islamic name for your little one</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <!-- Gender Selection -->
+                    <div>
+                        <label id="n-gender" class="block text-xs font-bold text-slate-400 uppercase mb-3">Gender</label>
+                        <div class="flex gap-2">
+                            <button onclick="setGender('boy')" id="btn-boy" class="flex-1 py-3 rounded-xl border-2 border-slate-100 font-bold transition-all text-slate-600 bg-slate-50 hover:bg-blue-50">Boy</button>
+                            <button onclick="setGender('girl')" id="btn-girl" class="flex-1 py-3 rounded-xl border-2 border-slate-100 font-bold transition-all text-slate-600 bg-slate-50 hover:bg-pink-50">Girl</button>
+                        </div>
+                    </div>
+                    <!-- Starting Letter -->
+                    <div>
+                        <label id="n-letter" class="block text-xs font-bold text-slate-400 uppercase mb-3">Starting Letter</label>
+                        <select id="startLetter" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold">
+                            <option value="A">A / ا</option><option value="B">B / ب</option><option value="D">D / د</option>
+                            <option value="F">F / ف</option><option value="G">G / غ</option><option value="H">H / ح</option>
+                            <option value="I">I / ا</option><option value="J">J / ج</option><option value="K">K / ک</option>
+                            <option value="L">L / ل</option><option value="M">M / م</option><option value="N">N / ن</option>
+                            <option value="Q">Q / ق</option><option value="R">R / ر</option><option value="S">S / س</option>
+                            <option value="T">T / ت</option><option value="U">U / ع</option><option value="W">W / و</option>
+                            <option value="Y">Y / ی</option><option value="Z">Z / ز</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="generateNames()" id="n-btn" class="w-full mt-6 bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">Show Names</button>
+            </div>
+
+            <!-- Results Grid -->
+            <div id="namesResults" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Names appear here -->
+            </div>
+        </section>
+
+        <!-- [About and Privacy sections same as before] -->
+        <section id="about-page" class="page-section bg-white p-8 rounded-2xl border border-slate-200">
+            <h2 class="text-2xl font-bold mb-4">About Muslim Calculates</h2>
+            <p class="text-slate-600 leading-relaxed">Providing high-quality, free Islamic utility tools for the global Ummah.</p>
+        </section>
+
+        <section id="privacy-page" class="page-section bg-white p-8 rounded-2xl border border-slate-200">
+            <h2 class="text-2xl font-bold mb-4">Privacy Policy</h2>
+            <p class="text-slate-600">Calculations and name searches are performed locally. We do not store your data.</p>
+        </section>
+
+    </main>
+
+    <footer class="max-w-4xl mx-auto px-4 py-8 text-center text-slate-400 text-xs border-t border-slate-200 mt-10">
+        <p>&copy; 2026 Muslim Calculates | muslimcalculates.com</p>
+        <div class="mt-2 flex justify-center gap-4">
+            <button onclick="showPage('privacy')" class="hover:text-emerald-600">Privacy</button>
+            <button onclick="showPage('about')" class="hover:text-emerald-600">About Us</button>
+        </div>
+    </footer>
+
+    <script>
+        // 1000 NAME DATABASE (EXTENDED SAMPLE)
+// BRAND: Muslim Calculates
+// DOMAIN: muslimcalculates.com
+// UPDATED DATASET: Expanded Muslim Female Names Database
+
+// BRAND: Muslim Calculates
+// DOMAIN: muslimcalculates.com
+// COMPLETE A-Z DATASET (BOYS & GIRLS)
+
+const nameDb = {
+    boy: {
+        A: [
+            {en: "Ayaan", ur: "ایان", m: "Gift of God"},
+            {en: "Ahmed", ur: "احمد", m: "Praiseworthy"},
+            {en: "Ali", ur: "علی", m: "Noble, High"},
+            {en: "Arham", ur: "ارحم", m: "Merciful"},
+            {en: "Azlan", ur: "ازلان", m: "Lion"}
+        ],
+        B: [
+            {en: "Bilal", ur: "بلال", m: "Prophet's Companion"},
+            {en: "Bari", ur: "باری", m: "The Creator"},
+            {en: "Basit", ur: "باسط", m: "One who spreads"},
+            {en: "Behzad", ur: "بہزاد", m: "Noble"},
+            {en: "Burhan", ur: "برہان", m: "Proof"}
+        ],
+        C: [
+            {en: "Chashman", ur: "چشمان", m: "Bright Eyes"},
+            {en: "Changez", ur: "چنگیز", m: "Brave, King"},
+            {en: "Chinar", ur: "چنار", m: "Beautiful Tree"},
+            {en: "Chakir", ur: "چاکر", m: "Chosen Companion"},
+            {en: "Chalook", ur: "چالوک", m: "Smart, Clever"}
+        ],
+        D: [
+            {en: "Daniyal", ur: "دانیال", m: "Intelligent"},
+            {en: "Dawoud", ur: "داؤد", m: "Beloved (Prophet)"},
+            {en: "Dawar", ur: "داور", m: "Ruler, Judge"},
+            {en: "Danish", ur: "دانش", m: "Wisdom"},
+            {en: "Dayyan", ur: "دیان", m: "Powerful Ruler"}
+        ],
+        E: [
+            {en: "Ehan", ur: "ایھان", m: "Full Moon"},
+            {en: "Eesa", ur: "عیسیٰ", m: "Prophet Jesus"},
+            {en: "Ehsan", ur: "احسان", m: "Kindness, Favor"},
+            {en: "Elamin", ur: "الامین", m: "Trustworthy"},
+            {en: "Eshaan", ur: "ایشان", m: "Desire, Wish"}
+        ],
+        F: [
+            {en: "Faisal", ur: "فیصل", m: "Decisive Judge"},
+            {en: "Fahad", ur: "فہد", m: "Panther, Lynx"},
+            {en: "Faraz", ur: "فراز", m: "Elevated, High"},
+            {en: "Farhan", ur: "فرمان", m: "Happy, Cheerful"},
+            {en: "Faris", ur: "فارس", m: "Knight, Horseman"}
+        ],
+        G: [
+            {en: "Ghias", ur: "غیاث", m: "Helper, Savior"},
+            {en: "Ghafur", ur: "غفور", m: "Most Forgiving"},
+            {en: "Ghalib", ur: "غالب", m: "Conqueror, Victor"},
+            {en: "Gohar", ur: "گوہر", m: "Precious Gem"},
+            {en: "Ghazawan", ur: "غزوان", m: "Warrior"}
+        ],
+        H: [
+            {en: "Hassan", ur: "حسن", m: "Handsome, Good"},
+            {en: "Hamza", ur: "حمزہ", m: "Lion, Strong"},
+            {en: "Hashim", ur: "ہاشم", m: "Generous Provider"},
+            {en: "Huzaifa", ur: "حذیفہ", m: "Wise Companion"},
+            {en: "Hadi", ur: "ہادی", m: "The Guide"}
+        ],
+        I: [
+            {en: "Ibrahim", ur: "ابراہیم", m: "Father of Nations"},
+            {en: "Imran", ur: "عمران", m: "Prosperity, Long Life"},
+            {en: "Irfan", ur: "عرفان", m: "Knowledge, Wisdom"},
+            {en: "Ismail", ur: "اسماعیل", m: "Prophet's Name"},
+            {en: "Ilyas", ur: "الیاس", m: "A Prophet's Name"}
+        ],
+        J: [
+            {en: "Junaid", ur: "جنید", m: "Soldier, Warrior"},
+            {en: "Jawad", ur: "جواد", m: "Liberal, Generous"},
+            {en: "Jafar", ur: "جعفر", m: "Rivulet, Stream"},
+            {en: "Jalal", ur: "جلال", m: "Glory, Grandeur"},
+            {en: "Jamil", ur: "جمیل", m: "Handsome, Fair"}
+        ],
+        K: [
+            {en: "Kamran", ur: "کامران", m: "Successful, Lucky"},
+            {en: "Kashif", ur: "کاشف", m: "Discoverer, Revealer"},
+            {en: "Kamil", ur: "کامل", m: "Perfect, Complete"},
+            {en: "Kamil", ur: "کفیل", m: "Sponsor, Guardian"},
+            {en: "Khalid", ur: "خالد", m: "Eternal, Infinite"}
+        ],
+        L: [
+            {en: "Luqman", ur: "لقمان", m: "Wise Sage"},
+            {en: "Lutfi", ur: "لطفی", m: "Kind, Friendly"},
+            {en: "Labeeb", ur: "لبیب", m: "Sensible, Intelligent"},
+            {en: "Liaquat", ur: "لیاقت", m: "Capability, Merit"},
+            {en: "Latif", ur: "لطیف", m: "Gentle, Kind"}
+        ],
+        M: [
+            {en: "Muhammad", ur: "محمد", m: "Praiseworthy"},
+            {en: "Mustafa", ur: "مصطفی", m: "The Chosen One"},
+            {en: "Musa", ur: "موسی", m: "Prophet's Name"},
+            {en: "Muneeb", ur: "منیب", m: "Repentant to Allah"},
+            {en: "Maaz", ur: "معاذ", m: "Brave, Protected"}
+        ],
+        N: [
+            {en: "Nabeel", ur: "نبيل", m: "Noble, Honorable"},
+            {en: "Naveed", ur: "نوید", m: "Good News, Glad Tidings"},
+            {en: "Nasir", ur: "ناصر", m: "Helper, Protector"},
+            {en: "Naeem", ur: "نعیم", m: "Blessing, Ease"},
+            {en: "Nadir", ur: "نادر", m: "Rare, Precious"}
+        ],
+        O: [
+            {en: "Omar", ur: "عمر", m: "Long-Lived, First Son"},
+            {en: "Osman", ur: "عثمان", m: "Servant of God"},
+            {en: "Osaid", ur: "اسید", m: "Little Lion"},
+            {en: "Owais", ur: "اویس", m: "Little Wolf, Gift"},
+            {en: "Omer", ur: "عمیر", m: "Pilgrim, Growing"}
+        ],
+        Q: [
+            {en: "Qasim", ur: "قاسم", m: "Distributor, Divider"},
+            {en: "Qaddafi", ur: "قذافی", m: "Archer"},
+            {en: "Qais", ur: "قیس", m: "Lover, Firm"},
+            {en: "Qamar", ur: "قمر", m: "The Moon"},
+            {en: "Qurban", ur: "قربان", m: "Sacrifice"}
+        ],
+        R: [
+            {en: "Rayyan", ur: "ریان", m: "Gate of Heaven"},
+            {en: "Rizwan", ur: "رضوان", m: "Satisfaction, Acceptance"},
+            {en: "Raheel", ur: "راحل", m: "Traveler, Explorer"},
+            {en: "Rehan", ur: "ریحان", m: "Sweet Scented Plant"},
+            {en: "Rashid", ur: "راشد", m: "Rightly Guided"}
+        ],
+        S: [
+            {en: "Saad", ur: "سعد", m: "Good Fortune"},
+            {en: "Sami", ur: "سمیع", m: "The Listener"},
+            {en: "Sufyan", ur: "سفیان", m: "Slim, Swift"},
+            {en: "Shahid", ur: "شاہد", m: "Witness, Present"},
+            {en: "Sameer", ur: "سمیر", m: "Entertaining Friend"}
+        ],
+        T: [
+            {en: "Tariq", ur: "طارق", m: "Morning Star, Night Visitor"},
+            {en: "Talha", ur: "طلحہ", m: "Kind of Tree, Companion"},
+            {en: "Taha", ur: "طہٰ", m: "Surah Name in Quran"},
+            {en: "Taimoor", ur: "تیمور", m: "Iron, Brave Ruler"},
+            {en: "Tanveer", ur: "تنویر", m: "Illumination, Radiance"}
+        ],
+        U: [
+            {en: "Usama", ur: "اسامہ", m: "Lion, Brave"},
+            {en: "Umair", ur: "عمیر", m: "Long-Lived"},
+            {en: "Umar", ur: "عمر", m: "Flourishing, Leader"},
+            {en: "Ubaid", ur: "عبید", m: "Faithful Servant"},
+            {en: "Usman", ur: "عثمان", m: "Chaste, Brave"}
+        ],
+        V: [
+            {en: "Vahid", ur: "واحد", m: "Unique, Single"},
+            {en: "Vaseem", ur: "وسیم", m: "Graceful, Good Looking"},
+            {en: "Vakar", ur: "وقار", m: "Dignity, Respect"},
+            {en: "Vasil", ur: "واسل", m: "Inseparable Friend"},
+            {en: "Viqas", ur: "وقاص", m: "Warrior, Fighter"}
+        ],
+        W: [
+            {en: "Waleed", ur: "ولید", m: "Newborn Child"},
+            {en: "Waseem", ur: "وسیم", m: "Handsome, Graceful"},
+            {en: "Waqas", ur: "وقاص", m: "Comrade, Combatant"},
+            {en: "Wajid", ur: "واجد", m: "Finder, Lover"},
+            {en: "Wafi", ur: "وافی", m: "Loyal, Trustworthy"}
+        ],
+        X: [
+            {en: "Xavier", ur: "زیویر", m: "Bright, Splendid"},
+            {en: "Xander", ur: "زینڈر", m: "Protector of Men"},
+            {en: "Xobeen", ur: "ژوبین", m: "Spear, Javelin"},
+            {en: "Xerxes", ur: "زرکسز", m: "Ruler over Heroes"},
+            {en: "Xun", ur: "زون", m: "Snow, Pure"}
+        ],
+        Y: [
+            {en: "Yousuf", ur: "یوسف", m: "Beautiful (Prophet)"},
+            {en: "Yaseen", ur: "یاسین", m: "Chief, Surah Name"},
+            {en: "Yahya", ur: "ییحییٰ", m: "Living (Prophet)"},
+            {en: "Yunus", ur: "یونس", m: "Dolphin (Prophet)"},
+            {en: "Yawar", ur: "یاور", m: "Helper, Friend"}
+        ],
+        Z: [
+            {en: "Zayd", ur: "زید", m: "Abundance, Growth"},
+            {en: "Zayan", ur: "زیان", m: "Beautiful, Hospitable"},
+            {en: "Zubair", ur: "زبیر", m: "Strong, Brave"},
+            {en: "Zeeshan", ur: "ذیشان", m: "Dignified, High Rank"},
+            {en: "Zohaib", ur: "زوہیب", m: "Leader, King"}
+        ]
+    },
+    girl: {
+        A: [
+            {en: "Ayesha", ur: "عائشہ", m: "Alive, Prosperous"},
+            {en: "Amara", ur: "عمارہ", m: "Eternal Beauty"},
+            {en: "Anaya", ur: "عنایہ", m: "Gift of God"},
+            {en: "Alishba", ur: "علشبہ", m: "Pretty, Innocent"},
+            {en: "Areeba", ur: "اریبہ", m: "Wise, Witty"}
+        ],
+        B: [
+            {en: "Bisma", ur: "بسمہ", m: "Politely Smiling"},
+            {en: "Bushra", ur: "بشریٰ", m: "Good News, Glad Tidings"},
+            {en: "Bareerah", ur: "بریرہ", m: "Pious, Religious"},
+            {en: "Benazir", ur: "بینظیر", m: "Unique, Incomparable"},
+            {en: "Batool", ur: "بتول", m: "Pure, Chaste"}
+        ],
+        C: [
+            {en: "Chandni", ur: "چاندنی", m: "Moonlight"},
+            {en: "Chashma", ur: "چشمہ", m: "Spring, Fountain"},
+            {en: "Chaman", ur: "چمن", m: "Garden of Flowers"},
+            {en: "Chiza", ur: "چیزہ", m: "Gift, Present"},
+            {en: "Chanda", ur: "چندا", m: "Bright Moon"}
+        ],
+        D: [
+            {en: "Dua", ur: "دعا", m: "Prayer, Supplication"},
+            {en: "Daniya", ur: "دانیہ", m: "Kind Hearted, Close"},
+            {en: "Dilshad", ur: "دلشاد", m: "Happy, Cheerful"},
+            {en: "Dur-e-Fishan", ur: "در فشاں", m: "Radiant Pearl"},
+            {en: "Deeba", ur: "دیبا", m: "Silk Cloth, Elegant"}
+        ],
+        E: [
+            {en: "Eman", ur: "ایمان", m: "Faith, Belief"},
+            {en: "Eshal", ur: "ایشال", m: "Flower in Paradise"},
+            {en: "Esha", ur: "عشاء", m: "Night Prayer, Life"},
+            {en: "Eliza", ur: "الیزہ", m: "Unique, Precious"},
+            {en: "Eram", ur: "ارم", m: "Heavenly Garden"}
+        ],
+        F: [
+            {en: "Fatima", ur: "فاطمہ", m: "Prophet's Daughter"},
+            {en: "Fiza", ur: "فضا", m: "Breeze, Open Air"},
+            {en: "Farah", ur: "فرح", m: "Joy, Happiness"},
+            {en: "Falak", ur: "فلک", m: "Sky, Galaxy"},
+            {en: "Fariha", ur: "فریحہ", m: "Cheerful, Smiling"}
+        ],
+        G: [
+            {en: "Ghazal", ur: "غزل", m: "Beautiful Words, Poem"},
+            {en: "Ghazala", ur: "غزالہ", m: "Delicate Deer"},
+            {en: "Gulnaz", ur: "گلناز", m: "Graceful Flower"},
+            {en: "Gulshan", ur: "گلشن", m: "Flower Garden"},
+            {en: "Giti", ur: "گیتی", m: "World, Universe"}
+        ],
+        H: [
+            {en: "Hania", ur: "ہانیہ", m: "Happy, Pleasant"},
+            {en: "Hoorain", ur: "حورین", m: "Companion of Paradise"},
+            {en: "Hiba", ur: "ہبہ", m: "Gift, Blessing"},
+            {en: "Hareem", ur: "حریم", m: "Sacred Sanctuary"},
+            {en: "Huda", ur: "ہدیٰ", m: "Right Guidance"}
+        ],
+        I: [
+            {en: "Iqra", ur: "اقرا", m: "To Read, Recite"},
+            {en: "Inaya", ur: "عنایہ", m: "Protection, Concern"},
+            {en: "Insha", ur: "انشاء", m: "Creation, Expression"},
+            {en: "Iram", ur: "ارم", m: "Garden in Heaven"},
+            {en: "Ismat", ur: "عصمت", m: "Purity, Honor"}
+        ],
+        J: [
+            {en: "Jannat", ur: "جنت", m: "Heaven, Paradise"},
+            {en: "Javeria", ur: "جویریہ", m: "Happiness Spreader"},
+            {en: "Jahan", ur: "جہاں", m: "The World"},
+            {en: "Jasmin", ur: "یاسمین", m: "Jasmine Flower"},
+            {en: "Jiay", ur: "جیا", m: "Sweetheart, Life"}
+        ],
+        K: [
+            {en: "Khadija", ur: "خدیجہ", m: "Trustworthy (First Wife of Prophet)"},
+            {en: "Kanza", ur: "کنزہ", m: "Hidden Treasure"},
+            {en: "Kiran", ur: "کرن", m: "Ray of Light"},
+            {en: "Komal", ur: "کومل", m: "Soft, Gentle"},
+            {en: "Kashaf", ur: "کشف", m: "Revelation, Miracle"}
+        ],
+        L: [
+            {en: "Laila", ur: "لیلیٰ", m: "Dark Night Beauty"},
+            {en: "Liba", ur: "لائبہ", m: "Most Beautiful Hoor"},
+            {en: "Lubna", ur: "لبنیٰ", m: "Pure, White Tree"},
+            {en: "Lina", ur: "لینا", m: "Tender, Delicate"},
+            {en: "Liza", ur: "لیزا", m: "Dedicated to God"}
+        ],
+        M: [
+            {en: "Maryam", ur: "مریم", m: "Pious, Purity"},
+            {en: "Mahnoor", ur: "ماہ نور", m: "Moonlight Glow"},
+            {en: "Mishal", ur: "مشعل", m: "Light, Torch"},
+            {en: "Manahil", ur: "مناہل", m: "Fresh Spring Water"},
+            {en: "Mehak", ur: "مہک", m: "Sweet Fragrance"}
+        ],
+        N: [
+            {en: "Noor", ur: "نور", m: "Divine Light"},
+            {en: "Nida", ur: "ندا", m: "Call, Voice"},
+            {en: "Naila", ur: "نائلہ", m: "Successful Achiever"},
+            {en: "Nadia", ur: "نادیہ", m: "Hope, Delicate"},
+            {en: "Nimra", ur: "نمرہ", m: "Soft, Gentle Mosque"}
+        ],
+        O: [
+            {en: "Oonah", ur: "اونہ", m: "True Friend"},
+            {en: "Oorala", ur: "اورالہ", m: "Light Bringer"},
+            {en: "Oshma", ur: "اوشما", m: "Golden Glow"},
+            {en: "Orina", ur: "اورینا", m: "Peaceful Pine Tree"},
+            {en: "Oozma", ur: "اوزما", m: "Greatest Force"}
+        ],
+        Q: [
+            {en: "Quratulain", ur: "قرة العین", m: "Delight of the Eyes"},
+            {en: "Qanitah", ur: "قانتہ", m: "Devout, Pious"},
+            {en: "Qadira", ur: "قادرہ", m: "Powerful, Capable"},
+            {en: "Qisra", ur: "کسریٰ", m: "Beautiful Story"},
+            {en: "Qudsia", ur: "قدسیہ", m: "Holy, Celestial"}
+        ],
+        R: [
+            {en: "Rida", ur: "ردا", m: "Contentment, Veil"},
+            {en: "Rania", ur: "رانیا", m: "Royal Queen"},
+            {en: "Rimsha", ur: "رمشا", m: "Bouquet of Flowers"},
+            {en: "Ramsha", ur: "رمشاء", m: "Face like Moon"},
+            {en: "Rubab", ur: "رباب", m: "Musical Instrument"}
+        ],
+        S: [
+            {en: "Sara", ur: "سارہ", m: "Pure, Princess"},
+            {en: "Sana", ur: "ثناء", m: "Praise, Radiance"},
+            {en: "Sidra", ur: "سدرہ", m: "Heavenly Lote Tree"},
+            {en: "Sobia", ur: "ثوبیہ", m: "Noble Woman"},
+            {en: "Sadia", ur: "سعدیہ", m: "Blessed, Lucky"}
+        ],
+        T: [
+            {en: "Tooba", ur: "طوبٰی", m: "Bliss, Tree in Paradise"},
+            {en: "Tanzila", ur: "تنزیلہ", m: "Hospitality, Sent Down"},
+            {en: "Tahira", ur: "طاہرہ", m: "Pure, Chaste"},
+            {en: "Tehreem", ur: "تحریم", m: "Respect, Sanctity"},
+            {en: "Tayyaba", ur: "طیبہ", m: "Clean, Pleasant"}
+        ],
+        U: [
+            {en: "Umeaima", ur: "امیمہ", m: "Little Mother"},
+            {en: "Urwa", ur: "عروہ", m: "Strong Handhold"},
+            {en: "Ushna", ur: "اشناء", m: "Beautiful Flower"},
+            {en: "Uzma", ur: "عظمیٰ", m: "Grandest, Greatest"},
+            {en: "Urooj", ur: "عروج", m: "Zenith, Height"}
+        ],
+        V: [
+            {en: "Vaniya", ur: "وانیا", m: "Gift of Allah"},
+            {en: "Varda", ur: "وردہ", m: "Rose, Splendid"},
+            {en: "Vafia", ur: "وافیہ", m: "Complete, Faithful"},
+            {en: "Vajeeha", ur: "وجیہہ", m: "Eminent, Glorious"},
+            {en: "Vareesha", ur: "وریشہ", m: "Lightning, Clear Light"}
+        ],
+        W: [
+            {en: "Wajiha", ur: "وجیہہ", m: "Dignified Profile"},
+            {en: "Wardah", ur: "وردہ", m: "Rose Flower"},
+            {en: "Wafa", ur: "وفا", m: "Loyalty, Faithfulness"},
+            {en: "Waliya", ur: "ولیا", m: "Protector, Friend"},
+            {en: "Wasima", ur: "وسیمہ", m: "Graceful, Pretty"}
+        ],
+        X: [
+            {en: "Xamira", ur: "ضمیرہ", m: "Heart, Mind, Conscious"},
+            {en: "Xara", ur: "زارہ", m: "Bright Princess"},
+            {en: "Xeenat", ur: "زینت", m: "Decoration, Honor"},
+            {en: "Xyla", ur: "زائلہ", m: "Woodland Dweller"},
+            {en: "Xaviera", ur: "زاویرہ", m: "Bright, Splendid"}
+        ],
+        Y: [
+            {en: "Yumna", ur: "یمنٰی", m: "Good Fortune, Blessed"},
+            {en: "Yashfeen", ur: "یشفین", m: "Healing, Health"},
+            {en: "Yasmin", ur: "یاسمین", m: "Jasmine Flower"},
+            {en: "Yara", ur: "یارا", m: "Bright Light, Soft water"},
+            {en: "Yusra", ur: "یسریٰ", m: "Ease, Prosperity"}
+        ],
+        Z: [
+            {en: "Zainab", ur: "زینب", m: "Generous, Prophet's Daughter"},
+            {en: "Zoya", ur: "زویا", m: "Loving, Alive"},
+            {en: "Zimal", ur: "زمل", m: "Companion, Cover"},
+            {en: "Zunaira", ur: "زنیرہ", m: "Flower of Paradise"},
+            {en: "Zara", ur: "زارہ", m: "High Status, Blooming Flower"}
+        ]
+    }
+};
+
+        let selectedGender = 'boy';
+
+        function setGender(g) {
+            selectedGender = g;
+            document.getElementById('btn-boy').className = g === 'boy' ? 'flex-1 py-3 rounded-xl border-2 border-blue-500 font-bold bg-blue-50 text-blue-700' : 'flex-1 py-3 rounded-xl border-2 border-slate-100 font-bold bg-slate-50 text-slate-600';
+            document.getElementById('btn-girl').className = g === 'girl' ? 'flex-1 py-3 rounded-xl border-2 border-pink-500 font-bold bg-pink-50 text-pink-700' : 'flex-1 py-3 rounded-xl border-2 border-slate-100 font-bold bg-slate-50 text-slate-600';
+        }
+
+        function generateNames() {
+            const letter = document.getElementById('startLetter').value;
+            const container = document.getElementById('namesResults');
+            container.innerHTML = '';
+            
+            const list = nameDb[selectedGender][letter] || [];
+            
+            if(list.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center py-10 text-slate-400">No names found starting with "${letter}" for a ${selectedGender}.</p>`;
+                return;
+            }
+
+            list.forEach(name => {
+                const div = document.createElement('div');
+                div.className = "name-card bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center";
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-extrabold text-slate-800 text-lg">${name.en}</h4>
+                        <p class="text-xs text-slate-400 font-medium">${name.m}</p>
+                    </div>
+                    <div class="text-emerald-600 font-bold text-xl urdu-text" dir="rtl">${name.ur}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Translation Engine
+        const translations = {
+            en: {
+                nTitle: "Baby Name Generator", nSubtitle: "Find the perfect Islamic name",
+                nGender: "Gender", nLetter: "Starting Letter", nBtn: "Show Names",
+                boy: "Boy", girl: "Girl"
+            },
+            ur: {
+                nTitle: "بچوں کے اسلامی نام", nSubtitle: "اپنے ننھے ساتھی کے لیے بہترین نام تلاش کریں",
+                nGender: "جنس", nLetter: "شروع کا حرف", nBtn: "نام دکھائیں",
+                boy: "لڑکا", girl: "لڑکی"
+            }
+        };
+
+        function changeLanguage(lang) {
+            document.body.className = `bg-slate-50 min-h-screen lang-${lang}`;
+            const t = translations[lang];
+            if(lang === 'ur') {
+                document.getElementById('n-title').innerText = t.nTitle;
+                document.getElementById('n-subtitle').innerText = t.nSubtitle;
+                document.getElementById('n-gender').innerText = t.nGender;
+                document.getElementById('n-letter').innerText = t.nLetter;
+                document.getElementById('n-btn').innerText = t.nBtn;
+                document.getElementById('btn-boy').innerText = t.boy;
+                document.getElementById('btn-girl').innerText = t.girl;
+            } else {
+                // English resets...
+                location.reload(); // Simple reset to English defaults
+            }
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(p + '-page').classList.add('active');
+        }
+
+        function calculate() {
+            const inputs = document.querySelectorAll('.calc-input');
+            const debt = parseFloat(document.getElementById('debtInput').value) || 0;
+            const nisab = parseFloat(document.getElementById('nisabValue').value) || 0;
+            const curr = document.getElementById('currency').value;
+            let total = 0;
+            inputs.forEach(i => total += parseFloat(i.value) || 0);
+            const zakat = (total - debt) >= nisab ? (total - debt) * 0.025 : 0;
+            document.getElementById('zakatAmount').innerText = zakat.toLocaleString();
+            document.querySelectorAll('.currency-symbol').forEach(s => s.innerText = curr);
+        }
+
+        document.querySelectorAll('.calc-input').forEach(i => i.addEventListener('input', calculate));
+        setGender('boy');
+    
+
+// BRAND: Muslim Calculates
+// CALCULATION CONTROLLER: Qaza-e-Umri Module
+
+function togglePrayerInputs() {
+    const isMissedAllChecked = document.getElementById('missedAll').checked;
+    const specificPanel = document.getElementById('specificPrayersPanel');
+    
+    if (isMissedAllChecked) {
+        specificPanel.classList.add('hidden');
+    } else {
+        specificPanel.classList.remove('hidden');
+    }
+}
+
+function calculateQaza() {
+    // 1. Fetch input parameters safely
+    const pubertyAge = parseInt(document.getElementById('pubertyAge').value) || 15;
+    
+    const yearsInput = parseInt(document.getElementById('missedYears').value) || 0;
+    const monthsInput = parseInt(document.getElementById('missedMonths').value) || 0;
+    const daysInput = parseInt(document.getElementById('missedDays').value) || 0;
+    
+    const isMissedAll = document.getElementById('missedAll').checked;
+
+    // 2. Perform raw baseline days conversion based on Lunar calendar estimation standard (~354 days or standard 365 days base)
+    // Here we balance accurately using standard year configurations (365 days standard calculation matrix framework)
+    const totalDaysMissed = (yearsInput * 365) + (monthsInput * 30) + daysInput;
+
+    // 3. Initialize individual tracking states
+    let qazaCounts = {
+        fajr: 0,
+        zuhr: 0,
+        asr: 0,
+        maghrib: 0,
+        isha: 0,
+        witr: 0
+    };
+
+    // If no days are computed, stop processing values
+    if (totalDaysMissed <= 0) {
+        updateDisplay(0, qazaCounts);
+        return;
+    }
+
+    // 4. Evaluate checkboxes based on conditions input configuration
+    if (isMissedAll) {
+        qazaCounts.fajr = totalDaysMissed;
+        qazaCounts.zuhr = totalDaysMissed;
+        qazaCounts.asr = totalDaysMissed;
+        qazaCounts.maghrib = totalDaysMissed;
+        qazaCounts.isha = totalDaysMissed;
+        qazaCounts.witr = totalDaysMissed;
+    } else {
+        qazaCounts.fajr = document.getElementById('qazaFajr').checked ? totalDaysMissed : 0;
+        qazaCounts.zuhr = document.getElementById('qazaZuhr').checked ? totalDaysMissed : 0;
+        qazaCounts.asr = document.getElementById('qazaAsr').checked ? totalDaysMissed : 0;
+        qazaCounts.maghrib = document.getElementById('qazaMaghrib').checked ? totalDaysMissed : 0;
+        qazaCounts.isha = document.getElementById('qazaIsha').checked ? totalDaysMissed : 0;
+        qazaCounts.witr = document.getElementById('qazaWitr').checked ? totalDaysMissed : 0;
+    }
+
+    // 5. Update presentation layer UI references
+    updateDisplay(totalDaysMissed, qazaCounts);
+}
+
+function updateDisplay(totalDays, counts) {
+    document.getElementById('totalMissedDaysDisplay').innerText = totalDays.toLocaleString();
+    document.getElementById('countFajr').innerText = counts.fajr.toLocaleString();
+    document.getElementById('countZuhr').innerText = counts.zuhr.toLocaleString();
+    document.getElementById('countAsr').innerText = counts.asr.toLocaleString();
+    document.getElementById('countMaghrib').innerText = counts.maghrib.toLocaleString();
+    document.getElementById('countIsha').innerText = counts.isha.toLocaleString();
+    document.getElementById('countWitr').innerText = counts.witr.toLocaleString();
+}
+    </script>
+
+
+
+</body>
+</html>
