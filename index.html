@@ -34,7 +34,7 @@
                 <button onclick="showPage('home')" class="text-slate-600 hover:text-emerald-600">Zakat Calculator</button>
                 <button onclick="showPage('names')" class="text-slate-600 hover:text-emerald-600">Islamic Names</button>
                 <button onclick="showPage('qaza-e-umri')" class="text-slate-600 hover:text-emerald-600">Qaza-e-Umri</button>
-                <button onclick="showPage('about')" class="text-slate-600 hover:text-emerald-600 hidden md:block">About</button>
+                <!-- <button onclick="showPage('about')" class="text-slate-600 hover:text-emerald-600 hidden md:block">About</button> -->
                <!--  <select id="langSelector" onchange="changeLanguage(this.value)" class="bg-slate-100 border-none rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 outline-none">
                     <option value="en">EN</option>
                     <option value="ur">اردو</option>
@@ -50,35 +50,358 @@
             <!-- [Calculator Code here - Included in logic below] -->
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-extrabold text-slate-900 section-title">Zakat Calculator</h2>
-                <p class="text-slate-500 mt-2 section-subtitle">Calculate your annual purification of wealth</p>
+                <p class="text-slate-500 mt-2 section-subtitle">A modern, reactive calculation engine designed to simplify complex financial obligations<br>while maintaining strict jurisprudential accuracy. </p>
             </div>
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <!-- Inputs same as previous version but integrated -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400 uppercase">Currency</label>
-                        <select id="currency" onchange="calculate()" class="w-full p-3 bg-slate-50 border rounded-xl outline-none">
-                            <option value="PKR">PKR (Pakistani Rupee)</option>
-                            <option value="USD">USD (Dollar)</option>
-                            <option value="BDT">BDT (Taka)</option>
-                            <option value="INR">INR (Rupee)</option>
-                        </select>
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-xs font-bold text-slate-400 uppercase">Silver Nisab</label>
-                        <input type="number" id="nisabValue" value="450000" oninput="calculate()" class="w-full p-3 bg-slate-50 border rounded-xl outline-none">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <input type="number" class="calc-input w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Cash on hand/bank">
-                    <input type="number" class="calc-input w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Gold/Silver Market Value">
-                    <input type="number" id="debtInput" oninput="calculate()" class="w-full p-4 bg-red-50 border border-red-100 rounded-xl text-red-700" placeholder="Debts Owed">
-                </div>
-                <div class="mt-8 bg-slate-900 rounded-2xl p-8 text-center text-white">
-                    <p class="text-emerald-400 text-xs font-bold uppercase mb-2">Payable Zakat</p>
-                    <div class="text-5xl font-black"><span class="currency-symbol text-2xl mr-2">PKR</span><span id="zakatAmount">0.00</span></div>
-                </div>
-            </div>
+        <div class="max-w-4xl mx-auto p-1 bg-gray-50 text-gray-800 space-y-6 antialiased">
+
+ <div x-data="{ 
+    // Currency State
+    currencySymbol: 'Rs. ', 
+    currencyCode: 'PKR',
+    updateCurrency(e) {
+      const selected = e.target.value;
+      this.currencyCode = selected;
+      if(selected === 'PKR') this.currencySymbol = 'Rs. ';
+      else if(selected === 'USD') this.currencySymbol = '$';
+      else if(selected === 'GBP') this.currencySymbol = '£';
+    },
+
+    // Metal Inputs & Constants
+    goldPrice: '',
+    silverPrice: '',
+    priceUnit: 'per gram',
+    goldNisabGrams: 87.48,
+    silverNisabGrams: 612.36,
+
+    // Asset Inputs
+    goldOwned: '',
+    goldUnit: 'grams',
+    silverOwned: '',
+    silverUnit: 'grams',
+    cash: '',
+    bankBalance: '',
+    stockValue: '',
+    investments: '',
+    receivables: '',
+    propertyInvestment: '',
+    carInvestment: '',
+    otherAssets: '',
+
+    // Liability Inputs
+    debtsPayable: '',
+
+    // Helper: Convert any unit to standard grams
+    getGrams(amount, unit) {
+      let val = parseFloat(amount) || 0;
+      return unit === 'tolas' ? val * 11.664 : val; 
+    },
+
+    // Helper: Normalize price per gram based on selected unit
+    getPricePerGram(price) {
+      let p = parseFloat(price) || 0;
+      if (this.priceUnit === 'per tola') return p / 11.664;
+      if (this.priceUnit === 'per ounce') return p / 28.3495;
+      return p;
+    },
+
+    // Reactive Thresholds
+    get goldNisabValue() {
+      return this.goldNisabGrams * this.getPricePerGram(this.goldPrice);
+    },
+    get silverNisabValue() {
+      return this.silverNisabGrams * this.getPricePerGram(this.silverPrice);
+    },
+    get applicableNisab() {
+      // Sharia default: If metal prices are missing, threshold evaluates to 0
+      if (!this.goldPrice || !this.silverPrice) return 0;
+      return Math.min(this.goldNisabValue, this.silverNisabValue);
+    },
+
+    // Aggregate Calculations
+    get totalAssets() {
+      let metalWealth = (this.getGrams(this.goldOwned, this.goldUnit) * this.getPricePerGram(this.goldPrice)) +
+                         (this.getGrams(this.silverOwned, this.silverUnit) * this.getPricePerGram(this.silverPrice));
+      
+      let liquidWealth = (parseFloat(this.cash) || 0) +
+                         (parseFloat(this.bankBalance) || 0) +
+                         (parseFloat(this.stockValue) || 0) +
+                         (parseFloat(this.investments) || 0) +
+                         (parseFloat(this.receivables) || 0) +
+                         (parseFloat(this.propertyInvestment) || 0) +
+                         (parseFloat(this.carInvestment) || 0) +
+                         (parseFloat(this.otherAssets) || 0);
+
+      return metalWealth + liquidWealth;
+    },
+    get finalDebts() {
+      return parseFloat(this.debtsPayable) || 0;
+    },
+    get netWealth() {
+      let net = this.totalAssets - this.finalDebts;
+      return net > 0 ? net : 0;
+    },
+    get zakatDue() {
+      // Zakat is only due if net wealth is equal to or exceeds the applicable Nisab threshold
+      if (this.applicableNisab > 0 && this.netWealth >= this.applicableNisab) {
+        return this.netWealth * 0.025;
+      }
+      return 0;
+    },
+
+    // Formatter utility
+    format(val) {
+      return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  }" 
+  class="max-w-4xl mx-auto p-6 bg-gray-50 text-gray-800 space-y-6 antialiased">
+
+  <div class="flex justify-end items-center">
+    <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 shadow-sm text-sm">
+      <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9s2.015-9 4.5-9m0 0a9.015 9.015 0 018.716 6.747M12 3a9.015 9.015 0 00-8.716 6.747M3.75 12h16.5" />
+      </svg>
+      <label class="text-gray-600 font-medium text-xs whitespace-nowrap">Select Currency</label>
+      <select @change="updateCurrency" class="bg-transparent font-semibold text-gray-700 outline-none cursor-pointer focus:ring-0 text-xs">
+        <option value="PKR">PKR (Rs.)</option>
+        <option value="USD">USD ($)</option>
+        <option value="GBP">GBP (£)</option>
+      </select>
+    </div>
+  </div>
+<!-- 
+  <div class="flex items-start space-x-2.5 bg-amber-50/70 border border-amber-200/60 p-3 rounded-xl text-amber-900 text-xs shadow-xs">
+    <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <p class="font-medium tracking-wide">Only enter assets held for at least 1 lunar year (Hawl).</p>
+  </div> -->
+
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-xs space-y-5">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+        <svg class="w-5 h-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.261-.705a6.377 6.377 0 012.239-2.239l.705-.261a6.377 6.377 0 012.239 2.239l.261.705M12 6a6.377 6.377 0 01-2.239 2.239l-.705.261a6.377 6.377 0 01-2.239-2.239l-.261-.705M12 6V3m0 3a6.377 6.377 0 012.239 2.239l.705.261a6.377 6.377 0 012.239-2.239l.261-.705M12 18v3m0-3a6.377 6.377 0 01-2.239-2.239l-.705-.261A6.377 6.377 0 016 12.364l-.261-.705" />
+        </svg>
+        Current metal prices
+      </h2>
+      <p class="text-xs text-gray-500 mt-0.5">Enter today's gold and silver prices to calculate nisab values</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Gold price (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="goldPrice" type="number" step="any" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold tracking-wide outline-none focus:bg-white focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all placeholder-gray-400">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Silver price (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="silverPrice" type="number" step="any" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold tracking-wide outline-none focus:bg-white focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all placeholder-gray-400">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Price unit</label>
+        <select x-model="priceUnit" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-700 outline-none focus:bg-white focus:border-gray-400 focus:ring-1 focus:ring-gray-400 cursor-pointer transition-all">
+          <option value="per gram">per gram</option>
+          <option value="per tola">per tola</option>
+          <option value="per ounce">per ounce</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bg-gray-50 rounded-xl p-5 grid grid-cols-1 md:grid-cols-2 gap-6 border border-gray-100">
+      <div class="space-y-1">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Gold nisab</span>
+        <div class="text-lg font-black text-gray-900">87.48 grams</div>
+        <div class="text-sm font-bold text-gray-500">= <span x-text="currencySymbol">Rs. </span><span x-text="format(goldNisabValue)">0.00</span></div>
+      </div>
+      <div class="space-y-1 border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-6">
+        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Silver nisab</span>
+        <div class="text-lg font-black text-gray-900">612.36 grams</div>
+        <div class="text-sm font-bold text-gray-500">= <span x-text="currencySymbol">Rs. </span><span x-text="format(silverNisabValue)">0.00</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-xs space-y-6">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+        <svg class="w-5 h-5 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Your zakatable assets
+      </h2>
+      <p class="text-xs text-gray-500 mt-0.5">Enter all liquid assets held for at least one lunar year</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Gold owned</label>
+        <div class="flex">
+          <input x-model="goldOwned" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 border-r-0 rounded-l-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+          <select x-model="goldUnit" class="bg-gray-50 border border-gray-200 rounded-r-xl px-3 text-xs font-bold text-gray-600 border-l-0 outline-none cursor-pointer">
+            <option value="grams">grams</option>
+            <option value="tolas">tolas</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Silver owned</label>
+        <div class="flex">
+          <input x-model="silverOwned" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 border-r-0 rounded-l-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+          <select x-model="silverUnit" class="bg-gray-50 border border-gray-200 rounded-r-xl px-3 text-xs font-bold text-gray-600 border-l-0 outline-none cursor-pointer">
+            <option value="grams">grams</option>
+            <option value="tolas">tolas</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Cash amount (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="cash" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Bank balance (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="bankBalance" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Business stock value (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="stockValue" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Investments value (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="investments" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Receivables amount (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="receivables" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Extra property for investment (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="propertyInvestment" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Extra car for investment (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="carInvestment" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-gray-600 mb-1.5">Other zakatable assets (<span x-text="currencyCode">PKR</span>)</label>
+        <input x-model="otherAssets" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-xs space-y-4">
+    <div>
+      <h2 class="text-xl font-bold text-gray-900 tracking-tight">Deductible debts</h2>
+      <p class="text-xs text-gray-500 mt-0.5">Enter short-term liabilities that are payable immediately</p>
+    </div>
+
+    <div class="max-w-md">
+      <label class="block text-xs font-bold text-gray-600 mb-1.5">Debts payable now (<span x-text="currencyCode">PKR</span>)</label>
+      <input x-model="debtsPayable" type="number" placeholder="0.00" class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none focus:bg-white focus:border-gray-400 transition-all">
+    </div>
+  </div>
+
+<div class="bg-white rounded-2xl border-t-4 border-emerald-600 border-x border-b border-gray-100 p-6 shadow-sm space-y-6 antialiased">
+  
+  <div class="flex items-center space-x-2.5 pb-2">
+    <div class="p-2 bg-emerald-50 rounded-lg text-emerald-700">
+      <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-3-3.675v3.675m-3-4.95v4.95M9 3h6M4 19.5A1.5 1.5 0 015.5 18H19a1.5 1.5 0 011.5 1.5M4 19.5A1.5 1.5 0 005.5 21H19a1.5 1.5 0 001.5-1.5M4 19.5V6.75A1.5 1.5 0 015.5 5.25h13a1.5 1.5 0 011.5 1.5v12.75" />
+      </svg>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold text-gray-900 tracking-tight">Calculation Results</h2>
+      <p class="text-xs text-gray-500">Live breakdown of your net spiritual wealth and obligations</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4 border-y border-gray-100 bg-gray-50/50 rounded-xl px-4">
+    <div class="space-y-0.5">
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Zakatable Assets</span>
+      <div class="text-xl font-black text-gray-800">
+        <span x-text="currencySymbol" class="text-gray-500 font-bold text-lg">Rs. </span><span x-text="format(totalAssets)">0.00</span>
+      </div>
+    </div>
+    <div class="space-y-0.5 sm:text-right sm:border-l sm:border-gray-200 sm:pl-6">
+      <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block">Less: Short-Term Debts</span>
+      <div class="text-xl font-black text-red-600">
+        <span class="font-bold text-lg">-</span><span x-text="currencySymbol" class="text-red-500 font-bold text-lg">Rs. </span><span x-text="format(finalDebts)">0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+    <div class="space-y-1">
+      <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Net Zakatable Wealth
+      </span>
+      <div class="text-2xl font-black text-gray-900 tracking-tight pl-3">
+        <span x-text="currencySymbol" class="text-gray-400 font-bold text-xl">Rs. </span><span x-text="format(netWealth)">0.00</span>
+      </div>
+    </div>
+
+    <div class="space-y-1 md:border-l md:border-gray-100 md:pl-6">
+      <span class="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Applicable Nisab Threshold
+      </span>
+      <div class="text-2xl font-black text-gray-900 tracking-tight pl-3">
+        <span x-text="currencySymbol" class="text-gray-400 font-bold text-xl">Rs. </span><span x-text="format(applicableNisab)">0.00</span>
+      </div>
+      <span class="text-[10px] font-semibold text-gray-400 mt-0.5 block pl-3 leading-none">(Evaluated using the lower of gold and silver values)</span>
+    </div>
+  </div>
+
+  <div class="relative overflow-hidden bg-emerald-950 text-white rounded-xl p-5 shadow-md transition-all border border-emerald-900 mt-4">
+    <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-emerald-900/40 rounded-full pointer-events-none"></div>
+    
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <span class="text-xs font-bold text-emerald-400 tracking-widest uppercase block">Zakat Due (Calculated at 2.5%)</span>
+        <div class="text-3xl font-black text-white tracking-tight mt-1 flex items-baseline gap-1">
+          <span x-text="currencySymbol" class="text-emerald-400 font-bold text-2xl">Rs. </span>
+          <span x-text="format(zakatDue)">0.00</span>
+        </div>
+      </div>
+      
+      <div class="self-start sm:self-center">
+        <template x-if="applicableNisab > 0 && netWealth >= applicableNisab">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-xs">
+            Nisab Met
+          </span>
+        </template>
+        <template x-if="!(applicableNisab > 0 && netWealth >= applicableNisab)">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-900 text-emerald-300 border border-emerald-800">
+            Below Nisab
+          </span>
+        </template>
+      </div>
+    </div>
+
+    <div x-show="applicableNisab > 0 && netWealth < applicableNisab" 
+         x-transition.opacity 
+         class="text-xs text-emerald-300/90 mt-3 pt-3 border-t border-emerald-900 font-medium tracking-wide relative z-10">
+      * Your net wealth does not meet or exceed the required Nisab threshold. You are currently exempt from paying Zakat on these amounts.
+    </div>
+  </div>
+</div>
+
+  <div class="flex items-start space-x-2 text-[10px] font-medium text-gray-400 leading-normal px-2">
+    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <p>This calculator provides guidance only. Consult a qualified Islamic scholar if you are unsure about any aspect of your Zakat calculation.</p>
+  </div>
+
+</div>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
         </section>
 
         <!-- PAGE: Qaza-e-Umri Namaz Calculator -->
@@ -301,6 +624,107 @@
             <p class="text-slate-600">Calculations and name searches are performed locally. We do not store your data.</p>
         </section>
 
+
+    <section id="contact-page" class="page-section bg-white p-8 rounded-2xl border border-slate-200">
+            <h2 class="text-2xl font-bold mb-4">Contact Us</h2>
+
+
+                <div class="max-w-4xl mx-auto p-6 bg-gray-50 text-gray-800 space-y-8 antialiased">
+  
+  <div class="text-center max-w-xl mx-auto space-y-2">
+    <h1 class="text-3xl font-black text-emerald-950 tracking-tight sm:text-4xl">Get in touch</h1>
+    <p class="text-sm sm:text-base text-gray-500 leading-relaxed">
+      Have a suggestion, noticed a calculation discrepancy, or want to request a feature? We would love to hear from you.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2 bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-5">
+      <h3 class="text-lg font-bold text-gray-900 tracking-tight">Send us a message</h3>
+      
+      <form action="#" method="POST" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="name" class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">Full name</label>
+            <input type="text" id="name" name="name" required placeholder="Your name" 
+                   class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-400">
+          </div>
+          <div>
+            <label for="email" class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">Email address</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" 
+                   class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-400">
+          </div>
+        </div>
+
+        <div>
+          <label for="subject" class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">Subject</label>
+          <input type="text" id="subject" name="subject" required placeholder="How can we help?" 
+                 class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-400">
+        </div>
+
+        <div>
+          <label for="message" class="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wider">Message</label>
+          <textarea id="message" name="message" rows="5" required placeholder="Write your message here..." 
+                    class="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder-gray-400 resize-none"></textarea>
+        </div>
+
+        <button type="submit" 
+                class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+          </svg>
+          Send Message
+        </button>
+      </form>
+    </div>
+
+    <div class="space-y-4">
+      
+      <a href="mailto:info@muslimcalculates.com" class="block group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md">
+        <div class="flex items-start space-x-4">
+          <div class="p-3 bg-emerald-50 rounded-xl text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0l-7.5-4.615a2.25 2.25 0 01-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <div class="space-y-0.5">
+            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Email Us</h4>
+            <p class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors break-all">info@muslimcalculates.com</p>
+            <p class="text-[11px] text-gray-400">Response within 24 hours</p>
+          </div>
+        </div>
+      </a>
+
+      <a href="https://wa.me/923121151057" target="_blank" class="block group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm transition-all hover:border-emerald-500 hover:shadow-md">
+        <div class="flex items-start space-x-4">
+          <div class="p-3 bg-emerald-50 rounded-xl text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+          </div>
+          <div class="space-y-0.5">
+            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider">WhatsApp</h4>
+            <p class="text-sm font-bold text-gray-900 group-hover:text-emerald-700 transition-colors">+92 312 1151057</p>
+            <p class="text-[11px] text-gray-400">Instant chat & updates</p>
+          </div>
+        </div>
+      </a>
+
+      <div class="bg-emerald-950 text-white rounded-2xl p-5 shadow-sm space-y-2 relative overflow-hidden">
+        <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-900/40 rounded-full pointer-events-none"></div>
+        <h4 class="text-xs font-bold text-emerald-400 tracking-wider uppercase">Privacy & Integrity</h4>
+        <p class="text-xs text-emerald-100/80 leading-relaxed">
+          Muslim Calculates values your data privacy. Any values or calculations entered across our tools are processed entirely client-side and never saved on servers.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+        </section>
+
+
     </main>
 
     <footer class="max-w-4xl mx-auto px-4 py-8 text-center text-slate-400 text-xs border-t border-slate-200 mt-10">
@@ -308,7 +732,8 @@
         <div class="mt-2 flex justify-center gap-4">
             <button onclick="showPage('privacy')" class="hover:text-emerald-600">Privacy</button>
             <button onclick="showPage('about')" class="hover:text-emerald-600">About Us</button>
-        </div>
+               <button onclick="showPage('contact')" class="hover:text-emerald-600">Contact Us</button>
+     </div>
     </footer>
 
     <script>
